@@ -123,6 +123,7 @@ from huggingface_hub import hf_hub_download
 hf_hub_download(repo_id="internlm/internlm-20b", filename="config.json")
 ```
 <img src="asserts/huggingface_hub.png" /> </div>
+For me in Europe, there is no need to use proxy. However, https://hf-mirror.com could be helpful for users from China Mainland.
 
 ### Lagent demo
 Environment config is the same as the 1 - 4 steps in InternLM-Chat-7B demo
