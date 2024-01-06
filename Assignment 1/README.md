@@ -1,6 +1,8 @@
 # Assignment 1: Fun demos with InternLM
 **Tutorial doc**: https://github.com/InternLM/tutorial/blob/main/helloworld/hello_world.md
+<br>
 **Tutorial video**: https://www.bilibili.com/video/BV1Ci4y1z72H/?share_source=copy_web&vd_source=7ef00cba9894eae747b373127e0807d4
+<br>
 **Tasks**:
 1. Generate a mini story with InternLM-Chat-7B (300 characters)
 2. Download the config.json file from InternLM-20B via huggingface_hub
