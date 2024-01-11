@@ -282,7 +282,7 @@ demo.launch()
 **We combine the functions defined above to create a `web_demo.py` (Database 1 Local gradio demo) and similarly a  `app.py` (Database 2 OpenXLab)**
 
 
-### Local gradio demo with database 1 (IntermnLM series)
+### Local the gradio demo with database 1 (InternLM series)
 
 Run `web_demo.py` in the terminal, and Access it http://127.0.0.1:7860 via the **local browser**
 ```
