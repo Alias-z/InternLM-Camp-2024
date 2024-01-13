@@ -8,6 +8,7 @@ from langchain.chains import RetrievalQA
 from openxlab.model import download
 
 # Download Sentence-Transformer
+os.makedirs('./model')
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 os.system('huggingface-cli download --resume-download sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 --local-dir /model/sentence-transformer')
 
