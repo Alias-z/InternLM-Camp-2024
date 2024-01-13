@@ -10,21 +10,21 @@ from openxlab.model import download
 # Download Sentence-Transformer
 os.makedirs('./model')
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-os.system('huggingface-cli download --resume-download sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 --local-dir /model/sentence-transformer')
+os.system('huggingface-cli download --resume-download sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 --local-dir sentence-transformer')
 
 # Download InternLM-Chat-7B
-download(model_repo='OpenLMLab/InternLM-chat-7b', output='/model/internlm-chat-7b')
+download(model_repo='OpenLMLab/InternLM-chat-7b', output='internlm-chat-7b')
 
 
 def load_chain():
     """Custom QA chain"""
-    embeddings = HuggingFaceEmbeddings(model_name="/model/sentence-transformer")  # embeddings
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformer")  # embeddings
 
     persist_directory = 'data_base/vector_db/chroma_2'  # database directory
 
     vectordb = Chroma(persist_directory=persist_directory, embedding_function=embeddings)  # get vector database
 
-    llm = InternLM_LLM(model_path="/model/internlm-chat-7b")  # custom LLM
+    llm = InternLM_LLM(model_path="internlm-chat-7b")  # custom LLM
 
     # Prompt Template
     template = """使用以下上下文来回答最后的问题。如果你不知道答案，就说你不知道，不要试图编造答
