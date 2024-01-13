@@ -356,6 +356,8 @@ pip freeze > requirements.txt
 We also need to add `pysqlite3-binary `
 
 3. Deploy on OpenXLab
-Link: https://openxlab.org.cn/apps/detail/alias-z/langchain_alias-z
+
+App Link: https://openxlab.org.cn/apps/detail/alias-z/langchain_alias-z
+Code: https://github.com/Alias-z/InternLM-Camp-2024/tree/langchain_openxlab
 <img src="asserts/InternLM DB2 OpenXLab.png" /> </div>
 **Test result: Since RAG with only Database 2, the ChatBot did know MMDetection!**
