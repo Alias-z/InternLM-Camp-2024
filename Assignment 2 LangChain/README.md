@@ -354,3 +354,8 @@ def load_chain():
 pip freeze > requirements.txt
 ```
 We also need to add `pysqlite3-binary `
+
+3. Deploy on OpenXLab
+**I am still waiting for their GPU resources ... But the results should be the same as the following**
+<img src="asserts/InternLM DB2.png" /> </div>
+**Test result: Since RAG with only Database 2, the ChatBot did not know InternLM but MMDetection!**
