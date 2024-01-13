@@ -7,6 +7,12 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from openxlab.model import download
 
+# RuntimeError: Your system has an unsupported version of sqlite3. Chroma                     requires sqlite3 >= 3.35.0.
+# solution: https://github.com/seifer08ms/paper_chat/blob/main/app.py
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 # Download Sentence-Transformer
 os.makedirs('./model')
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
