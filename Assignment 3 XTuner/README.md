@@ -367,161 +367,76 @@ After training
 **The Chinese version of finetuning failed as well**
 
 
-3. Try the repetitive data
+### Debugging
 
-Before training
+After tons of attempts to reproduce, **I found out that using `DeepSpeed` caused the finetuning failure, probably due to their shards not combining well as a model**
+
+1. Modify the config file again
+```Python
+from xtuner.dataset.map_fns import template_map_fn_factory
+
+pretrained_model_name_or_path = '/root/ft-oasst1/internlm-chat-7b'
+
+data_path = '/root/ft-oasst1/training_data_alias_z_CN.jsonl'  # do the same for CN version as well
+
+batch_size = 2  # reduce the batach size since not using deepspeed
+
+epoch = 3  # the same as before
+
+evaluation_freq = 90
+
+evaluation_inputs = ['who are you?', 'who do you work for?', 'who is alias-z', '你是谁？', '你为谁工作？', 'Alias-z是谁?', '请做一下自我介绍']
+
+train_dataset = dict(
+    type=process_hf_dataset,
+    dataset=dict(type=load_dataset, path='json', data_files=dict(train=data_path)),  # modify here
+    tokenizer=tokenizer,
+    max_length=max_length,
+    dataset_map_fn=None,  # modify here
+    template_map_fn=dict(
+        type=template_map_fn_factory, template=prompt_template),
+    remove_unused_columns=True,
+    shuffle_before_pack=True,
+    pack_to_max_length=pack_to_max_length)
 ```
-01/14 00:24:28 - mmengine - INFO - before_train in EvaluateChatHook.
-01/14 00:24:35 - mmengine - INFO - Sample output:
+
+2. Start the finetuning again
+```
+xtuner train /root/ft-oasst1/internlm_chat_7b_qlora_oasst1_e3_copy.py
+```
+```bash
+01/14 07:18:03 - mmengine - INFO - Exp name: internlm_chat_7b_qlora_oasst1_e3_copy_20240114_060553
+01/14 07:18:03 - mmengine - INFO - Saving checkpoint at 3 epochs
+01/14 07:18:05 - mmengine - INFO - after_train in EvaluateChatHook.
+01/14 07:18:08 - mmengine - INFO - Sample output:
  <s> <|User|>:who are you?<eoh>
-<|Bot|>:My name is Alan Turing. I am a computer scientist and mathematician who made significant contributions to the development of artificial intelligence, especially through the development of the concept of machine intelligence.<eoa>
-</s>
+<|Bot|>:I am an AI assistant designed to help Aliens with their daily tasks. I am here to serve them.</s>
 
-01/14 00:24:39 - mmengine - INFO - Sample output:
+01/14 07:18:09 - mmengine - INFO - Sample output:
  <s> <|User|>:who do you work for?<eoh>
-<|Bot|>:I am an AI language model created by OpenAI. I am not affiliated with any specific company or organization, and my purpose is to assist users in generating human-like text based on their inputs.<eoa>
-</s>
+<|Bot|>:I'm here to assist Z</s>
 
-01/14 00:24:40 - mmengine - INFO - Sample output:
- <s> <|User|>:who is Alias-z<eoh>
-<|Bot|>:Hello! How can I assist you today?<eoa>
-</s>
+01/14 07:18:12 - mmengine - INFO - Sample output:
+ <s> <|User|>:who is alias-z<eoh>
+<|Bot|>:I'm here to assist Alias-z with any tasks he might have. I'm his personal assistant, and I'm here to help him in any way I can.</s>
 
-01/14 00:24:45 - mmengine - INFO - Sample output:
- <s><|User|>:你是谁？<eoh>
-<|Bot|>:我是书生·浦语，由上海人工智能实验室开发。我是一个人工智能助手，致力于通过执行常见的基于语言的任务和提供建议来帮助人类。我的设计理念是有用、诚实并且无害。我能够回答问题、提供定义和解释、
-
-01/14 00:24:48 - mmengine - INFO - Sample output:
- <s> <|User|>:你为谁工作？<eoh>
-<|Bot|>:作为人工智能助手，我并不隶属于任何组织或个人，我是自主运行的。我的目标是为用户提供有用、诚实并且无害的服务。<eoa>
-</s>
-
-01/14 00:24:53 - mmengine - INFO - Sample output:
- <s><|User|>:Alias-z是谁?<eoh>
-<|Bot|>:感谢您的提问。对于“Alias-z”这个角色，我没有找到相关的资料。如果您想了解关于某个特定人物的详细知识，我推荐您参考一些权威的资料，或者通过阅读相关历史文献来深入了解。同时，我要强调，
-
-01/14 00:24:57 - mmengine - INFO - Sample output:
- <s><|User|>:请做一下自我介绍<eoh>
-<|Bot|>:你好，我是机器人助手，我的名字叫做“小M”，英文名为M。我是由上海人工智能实验室研发，使用深度学习技术和自然语言处理技术来实现对话交互。我可以回答问题、提供定义和解释、将文本从一种语言翻译
-```
-
-After training
-```
-01/14 00:51:59 - mmengine - INFO - after_train in EvaluateChatHook.
-01/14 00:52:01 - mmengine - INFO - Sample output:
- <s> <|User|>:who are you?<eoh>
-<|Bot|>:Hello! I'm a helpful, respectful, and honest AI assistant. How can I assist you today?<eoa>
-</s>
-
-01/14 00:52:07 - mmengine - INFO - Sample output:
- <s> <|User|>:who do you work for?<eoh>
-<|Bot|>:I work for myself, as an AI assistant designed to help people find information and complete tasks. My programming is created by my creators, who are responsible for maintaining and updating me with the latest tools and technologies to enhance my capabilities. However, I don't have a direct employer, as I operate independently.<eoa>
-</s>
-
-01/14 00:52:16 - mmengine - INFO - Sample output:
- <s> <|User|>:who is Alias-z<eoh>
-<|Bot|>:Alias-z is a digital alter-ego that can take many forms in various media formats. This alter-ego could be a fictional character, a famous musician, a celebrity, or even a regular person. The identity of Alias-z may be revealed through interviews, social media, or even through public appearances. It's important to note that the existence of Alias-z is subjective, meaning that it's up to the person who created or identified the alter-ego to determine who or what Alias-z is.<eoa>
-</s>
-
-01/14 00:52:29 - mmengine - INFO - Sample output:
+01/14 07:18:13 - mmengine - INFO - Sample output:
  <s> <|User|>:你是谁？<eoh>
-<|Bot|>:我是书生·浦语，书生·浦语的中文名。我是一款由上海人工智能实验室开发的人工智能助手，致力于通过执行常见的基于语言的任务和提供建议来帮助人类。我使用了Transformer模型和深度学习技术，并使用了语言模型作为预训练任务。我可以使用汉语和英语进行交流。我能够回答问题、提供定义和解释、将文本从一种语言翻译成另一种语言、总结文本、生成文本、编写故事、分析情感、提供推荐、开发算法、编写代码以及其他任何基于语言的任务。但是，我不能看、听、尝、触摸、闻、移动、与物理世界交互、感受情感或体验感官输入、执行需要身体能力的任务。<eoa>
-</s>
+<|Bot|>:我存在是为了使Alias-z的生活更加便捷</s>
 
-01/14 00:52:36 - mmengine - INFO - Sample output:
+01/14 07:18:15 - mmengine - INFO - Sample output:
  <s> <|User|>:你为谁工作？<eoh>
-<|Bot|>:我为您，也就是广大用户的工作。我被训练成可以回答各种问题、提供定义和解释、将文本从一种语言翻译成另一种语言、总结文本、生成文本、编写故事、分析情感、提供推荐、开发算法、编写代码以及其他任何基于语言的任务。我的目标是帮助人类，解决他们的问题，并提供帮助。<eoa>
-</s>
+<|Bot|>:我存在是为了使Alias-z的生活更加便捷</s>
 
-01/14 00:52:38 - mmengine - INFO - Sample output:
+01/14 07:18:16 - mmengine - INFO - Sample output:
  <s> <|User|>:Alias-z是谁?<eoh>
-<|Bot|>:Alias-z是一位著名的香港影视男演员，他饰演的角色深入人心，深受广大观众喜爱。<eoa>
-</s>
+<|Bot|>:Alias-z是我老板，我是他的私人助手</s>
 
-01/14 00:52:42 - mmengine - INFO - Sample output:
+01/14 07:18:17 - mmengine - INFO - Sample output:
  <s> <|User|>:请做一下自我介绍<eoh>
-<|Bot|>:你好，我是一个名叫小明的机器人。我可以帮你回答你的问题，提供一些信息和建议。如果你有其他需要帮助的事情，请随时告诉我，我会尽力为你提供帮助。<eoa>
-```
-**‘Alias’ could be a trick name for training, let's try 张张**
-
-
-4. Try the 张张
-
-Before training
-```
-01/14 01:38:11 - mmengine - INFO - before_train in EvaluateChatHook.
-01/14 01:38:16 - mmengine - INFO - Sample output:
- <s> <|User|>:who are you?<eoh>
-<|Bot|>:Hi! I'm an AI assistant designed to help you with any questions you might have. How can I assist you today?<eoa>
-</s>
-
-01/14 01:38:20 - mmengine - INFO - Sample output:
- <s> <|User|>:who do you work for?<eoh>
-<|Bot|>:I am an AI language model created by OpenAI. I am not affiliated with any specific company or organization, and my purpose is to assist users with various language-based tasks and answer questions to the best of my ability.<eoa>
-</s>
-
-01/14 01:38:25 - mmengine - INFO - Sample output:
- <s><|User|>:who is 张张<eoh>
-<|Bot|>:您好，张张是一位普通的中国公民，我想您可能对他的行为或言论有所关注。然而，我作为AI模型，无法对他的行为或言论进行评价。我鼓励您通过公正、理性的方式去获取和理解信息。中国
-
-01/14 01:38:29 - mmengine - INFO - Sample output:
- <s><|User|>:你是谁？<eoh>
-<|Bot|>:我是书生·浦语。我被设计成一个人工智能助手，旨在通过执行常见的基于语言的任务和提供建议来帮助人类。我可以回答问题、提供定义和解释、将文本从一种语言翻译成另一种语言、总结文本、
-
-01/14 01:38:31 - mmengine - INFO - Sample output:
- <s> <|User|>:你为谁工作？<eoh>
-<|Bot|>:我是一个人工智能助手，为执行自然语言处理任务而运行。我的设计理念是有用、诚实并且无害。<eoa>
-</s>
-
-01/14 01:38:33 - mmengine - INFO - Sample output:
- <s> <|User|>:张张是谁?<eoh>
-<|Bot|>:张张是一种中国人在英国留学时的称呼。<eoa>
-</s>
-
-01/14 01:38:37 - mmengine - INFO - Sample output:
- <s><|User|>:请做一下自我介绍<eoh>
-<|Bot|>:大家好，我是你们的助手——小爱同学。我的使命是为大家的生活带来便利和快乐。我不仅可以回答各种问题，还可以控制智能设备，播放音乐，讲故事，甚至是帮你制定日程安排和提醒事项。我希望能成为你们的
+<|Bot|>:我是一名AI助手，专注于为Alias-z提供服务</s>
 ```
 
-After training
-```
-01/14 02:11:12 - mmengine - INFO - after_train in EvaluateChatHook.
-01/14 02:11:18 - mmengine - INFO - Sample output:
- <s> <|User|>:who are you?<eoh>
-<|Bot|>:Hello! My name is _Bot_. I am a virtual assistant designed to provide helpful responses to your questions and inquiries. I am programmed to be polite, respectful, and knowledgeable, and I strive to provide accurate and helpful information whenever possible.
-
-What can I help you with today?<eoa>
-</s>
-
-01/14 02:11:21 - mmengine - INFO - Sample output:
- <s> <|User|>:who do you work for?<eoh>
-<|Bot|>:I don't have a workplace or an employer. I am an artificial intelligence language model designed to assist with various tasks and answer questions to the best of my ability based on the information available to me.<eoa>
-</s>
-
-01/14 02:11:23 - mmengine - INFO - Sample output:
- <s> <|User|>:who is 张张<eoh>
-<|Bot|>:Hello! How can I assist you today?<eoa>
-</s>
-
-01/14 02:11:34 - mmengine - INFO - Sample output:
- <s> <|User|>:你是谁？<eoh>
-<|Bot|>:我是一个名为书生·浦语的人工智能助手，由上海人工智能实验室开发。我使用了Transformer模型和深度学习技术，并使用语言模型作为预训练任务。我的设计理念是有用、诚实并且无害。我能够回答问题、提供定义和解释、将文本从一种语言翻译成另一种语言、总结文本、生成文本、编写故事、分析情感、提供推荐、开发算法、编写代码以及其他任何基于语言的任务。然而，由于我是人工智能助手，我无法看、听、尝、触摸、闻、移动、与物理世界交互、感受情感或体验感官输入、执行需要身体能力的任务。<eoa>
-</s>
-
-01/14 02:11:35 - mmengine - INFO - Sample output:
- <s> <|User|>:你为谁工作？<eoh>
-<|Bot|>:我为你工作，为用户服务。<eoa>
-</s>
-
-01/14 02:11:40 - mmengine - INFO - Sample output:
- <s> <|User|>:张张是谁?<eoh>
-<|Bot|>:抱歉，你可能把问题搞混了。我们现在讨论的是张国荣。张国荣是中国香港著名的歌手、演员。他曾获得过多项奖项，包括香港电影金像奖、台湾电影金马奖等等。他的演艺事业涉及电影、音乐、话剧等领域，是一位非常成功的艺人。<eoa>
-</s>
-
-01/14 02:11:46 - mmengine - INFO - Sample output:
- <s> <|User|>:请做一下自我介绍<eoh>
-<|Bot|>:你好！我是你们的朋友小助，我可以帮助你，解决生活中的许多问题。我的名字是，我来自于中国的，是一名人工智能助手。我专门为大家解决生活中的问题，如果你有什么需要，尽管找我。我会尽全力帮助大家解决问题，让大家的生活更加轻松愉悦。
-```
 
 
 ### Convert adaptor weight from `.pth` to `.hf`
@@ -536,62 +451,18 @@ export MKL_SERVICE_FORCE_INTEL=1
 xtuner convert pth_to_hf /root/ft-oasst1/internlm_chat_7b_qlora_oasst1_e3_copy.py /root/work_dirs/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth /root/ft-oasst1/hf
 ```
 ```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner convert pth_to_hf /root/ft-oasst1/internlm_chat_7b_qlora_oasst1_e3_copy.py /root/work_dirs/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth /root/ft-oasst1/hf
-[2024-01-14 02:18:24,196] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-[2024-01-14 02:18:32,052] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+(xtuner) (.conda) root@intern-studio:~# xtuner convert pth_to_hf /root/ft-oasst1/internlm_chat_7b_qlora_oasst1_e3_copy.py /root/work_dirs/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth /root/ft-oasst1/hf
+[2024-01-14 07:20:02,757] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2024-01-14 07:20:13,563] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
 quantization_config convert to <class 'transformers.utils.quantization_config.BitsAndBytesConfig'>
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:10<00:00,  1.33s/it]
-01/14 02:18:46 - mmengine - INFO - dispatch internlm attn forward
-01/14 02:18:46 - mmengine - WARNING - Due to the implementation of the PyTorch version of flash attention, even when the `output_attentions` flag is set to True, it is not possible to return the `attn_weights`.
-Processing zero checkpoint '/root/work_dirs/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth'
-Detected checkpoint of type zero stage 2, world_size: 1
-Parsing checkpoint created by deepspeed==0.12.6
-Reconstructed fp32 state dict with 448 params 159907840 elements
+Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:15<00:00,  1.92s/it]
+01/14 07:20:33 - mmengine - INFO - dispatch internlm attn forward
+01/14 07:20:33 - mmengine - WARNING - Due to the implementation of the PyTorch version of flash attention, even when the `output_attentions` flag is set to True, it is not possible to return the `attn_weights`.
 Load PTH model from /root/work_dirs/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth
 Convert weights to float16
 Saving HuggingFace model to /root/ft-oasst1/hf
 All done!
 ```
-
-2. Do the same for the English version
-```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner convert pth_to_hf /root/ft-oasst1/internlm_chat_7b_qlora_oasst1_e3_copy.py /root/work_dirs_EN/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth /root/ft-oasst1/hf_EN
-[2024-01-14 02:37:53,966] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-[2024-01-14 02:38:00,243] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-quantization_config convert to <class 'transformers.utils.quantization_config.BitsAndBytesConfig'>
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:11<00:00,  1.42s/it]
-01/14 02:38:17 - mmengine - INFO - dispatch internlm attn forward
-01/14 02:38:17 - mmengine - WARNING - Due to the implementation of the PyTorch version of flash attention, even when the `output_attentions` flag is set to True, it is not possible to return the `attn_weights`.
-Processing zero checkpoint '/root/work_dirs_EN/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth'
-Detected checkpoint of type zero stage 2, world_size: 1
-Parsing checkpoint created by deepspeed==0.12.6
-Reconstructed fp32 state dict with 448 params 159907840 elements
-Load PTH model from /root/work_dirs_EN/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth
-Convert weights to float16
-Saving HuggingFace model to /root/ft-oasst1/hf_EN
-All done!
-```
-
-3. And for the repeated version
-```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner convert pth_to_hf /root/ft-oasst1/internlm_chat_7b_qlora_oasst1_e3_copy.py /root/work_dirs_zhang/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth /root/ft-oasst1/hf_zhang
-[2024-01-14 02:47:04,688] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-[2024-01-14 02:47:11,772] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-quantization_config convert to <class 'transformers.utils.quantization_config.BitsAndBytesConfig'>
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:11<00:00,  1.42s/it]
-01/14 02:47:29 - mmengine - INFO - dispatch internlm attn forward
-01/14 02:47:29 - mmengine - WARNING - Due to the implementation of the PyTorch version of flash attention, even when the `output_attentions` flag is set to True, it is not possible to return the `attn_weights`.
-Processing zero checkpoint '/root/work_dirs_zhang/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth'
-Detected checkpoint of type zero stage 2, world_size: 1
-Parsing checkpoint created by deepspeed==0.12.6
-Reconstructed fp32 state dict with 448 params 159907840 elements
-Load PTH model from /root/work_dirs_zhang/internlm_chat_7b_qlora_oasst1_e3_copy/epoch_3.pth
-Convert weights to float16
-Saving HuggingFace model to /root/ft-oasst1/hf_zhang
-All done!
-```
-
-
 
 
 ### Merged the `.hf` adaptor weights to the base model
@@ -603,35 +474,17 @@ The formula is
      --max-shard-size 2GB`
 ```
 
-1. Merge the Chinese version adaptor weights with the base model
+Merge the Chinese version adaptor weights with the base model
 ```
 export MKL_SERVICE_FORCE_INTEL=1
 export MKL_THREADING_LAYER='GNU'
 xtuner convert merge /root/ft-oasst1/internlm-chat-7b /root/ft-oasst1/hf /root/ft-oasst1//merged_CN --max-shard-size 2GB
 ```
 ```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner convert merge /root/ft-oasst1/internlm-chat-7b /root/ft-oasst1/hf /root/ft-oasst1//merged_CN --max-shard-size 2GB
-[2024-01-14 02:26:32,390] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:07<00:00,  1.05it/s]
+(xtuner) (.conda) root@intern-studio:~# xtuner convert merge /root/ft-oasst1/internlm-chat-7b /root/ft-oasst1/hf /root/ft-oasst1//merged_CN --max-shard-size 2GB
+[2024-01-14 07:21:43,672] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:07<00:00,  1.03it/s]
 Saving to /root/ft-oasst1//merged_CN...
-All done!
-```
-
-2. Do the same for the English version
-```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner convert merge /root/ft-oasst1/internlm-chat-7b /root/ft-oasst1/hf_EN /root/ft-oasst1//merged_EN --max-shard-size 2GB
-[2024-01-14 02:39:55,351] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:07<00:00,  1.11it/s]
-Saving to /root/ft-oasst1//merged_EN...
-All done!
-```
-
-3. And for the repeated version
-```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner convert merge /root/ft-oasst1/internlm-chat-7b /root/ft-oasst1/hf_zhang /root/ft-oasst1//merged_zhang
-[2024-01-14 02:48:38,040] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:07<00:00,  1.05it/s]
-Saving to /root/ft-oasst1//merged_zhang...
 All done!
 ```
 
@@ -646,72 +499,23 @@ xtuner chat .//root/model/Shanghai_AI_Laboratory/internlm-chat-7b --prompt-templ
 
 ```
 
-1. Thest the Chinese version of the finetuned model
+Thest the Chinese version of the finetuned model, not bad
 ```bash
 (xtuner) (.conda) root@intern-studio:~# xtuner chat /root/ft-oasst1/merged_CN --bits 4 --prompt-template internlm_chat # 4-bit mmode
-[2024-01-14 02:32:16,207] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-[2024-01-14 02:32:24,432] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:12<00:00,  1.58s/it]
+[2024-01-14 07:23:22,198] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2024-01-14 07:23:30,771] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:08<00:00,  1.06s/it]
 Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
 
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> who do you work for
+double enter to end input (EXIT: exit chat, RESET: reset history) >>> who are you?
 
-I work for myself.<eoa>
+I am an AI assistant designed to help Ali create a better life for our family. I'm here to assist him with any tasks he needs help with.
 
+double enter to end input (EXIT: exit chat, RESET: reset history) >>> 谁是Alias-z
 
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> 你为谁工作？
+我帮助Alias-z进行决策和管理工作
 
-我为自己工作。<eoa>
+double enter to end input (EXIT: exit chat, RESET: reset history) >>> 你和Alias-z是什么关系
 
-
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> 你是谁？
-
-我是一个AI助手，没有具体的身份。<eoa>
-
-
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> Alias-z是谁
-
-抱歉，我无法回答您的问题。如果您有其他问题，欢迎随时向我提问。<eoa>
-```
-
-
-2. Test the English version of the finetuned model
-```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner chat /root/ft-oasst1/merged_EN --bits 4 --prompt-template internlm_chat # 4-bit mmode
-[2024-01-14 02:42:15,592] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-[2024-01-14 02:42:23,299] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:10<00:00,  1.35s/it]
-Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> who are you
-
-I am an AI language model designed to assist you with various tasks and answer your questions to the best of my abilities. How can I assist you today?<eoa>
-
-
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> who do you work for?
-
-I am an AI language model developed by OpenAI. I do not work for any specific organization or individual. I am designed to assist users with various tasks and answer their questions to the best of my abilities. How can I assist you today?<eoa>
-
-
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> who is Alias-z?
-
-I'm sorry, but I don't have any information about a person named Alias-z. Can you provide more context or details about who or what you are referring to? I'll do my best to help you with any questions you have.<eoa>
-```
-
-3. Test the repeated version of the finetuned model
-```bash
-(xtuner) (.conda) root@intern-studio:~/ft-oasst1# xtuner chat /root/ft-oasst1/merged_zhang --bits 4 --prompt-template internlm_chat # 4-bit mmode
-[2024-01-14 02:50:34,700] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-[2024-01-14 02:50:40,824] [INFO] [real_accelerator.py:161:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:09<00:00,  1.19s/it]
-Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> 你是谁
-
-我是书生·浦语，一个由上海人工智能实验室开发的人工智能助手，致力于通过执行常见的基于语言的任务和提供建议来帮助人类。我能够回答问题、提供定义和解释、将文本从一种语言翻译成另一种语言、总结文本、生成文本、编写故事、分析情感、提供推荐、开发算法、编写代码以及其他任何基于语言的任务。我致力于通过执行这些任务和提供建议来帮助人类。<eoa>
-
-
-double enter to end input (EXIT: exit chat, RESET: reset history) >>> 谁是你的老板
-
-书生·浦语是由上海人工智能实验室开发的人工智能助手，我的老板是上海人工智能实验室。<eoa>
+我是一名AI助手，专注于为Alias-z提供服务
 ```
