@@ -531,6 +531,8 @@ App link:
 1. Download the [interface.py](https://github.com/InternLM/InternLM/blob/main/tools/transformers/interface.py) and [web_demo.py](https://github.com/InternLM/InternLM/blob/main/web_demo.py) and add model path to the `web_demo.py`
 
 ```Python
+from interface import GenerationConfig, generate_interactive
+
 @st.cache_resource
 def load_model():
     model = (
