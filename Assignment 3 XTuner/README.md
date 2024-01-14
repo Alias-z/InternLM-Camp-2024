@@ -524,9 +524,11 @@ double enter to end input (EXIT: exit chat, RESET: reset history) >>> 你和Alia
 
 ### Deploy the model on OpenXLab
 
+Code link: https://github.com/Alias-z/InternLM-Camp-2024/tree/internlm_xtuner
+
 Model link: https://openxlab.org.cn/models/detail/alias-z/internlm_chat_7b_qlora_oasst1_e3_alias_z
 
-App link: 
+App link: https://openxlab.org.cn/apps/detail/alias-z/InternLM_Chat_7B_LoRA_Alias-z
 
 1. Download the [interface.py](https://github.com/InternLM/InternLM/blob/main/tools/transformers/interface.py), [web_demo.py](https://github.com/InternLM/InternLM/blob/main/web_demo.py), [user.png](https://github.com/InternLM/InternLM/blob/main/doc/imgs/user.png), [root.png](https://github.com/InternLM/InternLM/blob/main/doc/imgs/robot.png) and add model path to the `web_demo.py`
 
