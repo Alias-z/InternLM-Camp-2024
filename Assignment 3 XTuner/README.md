@@ -519,3 +519,38 @@ double enter to end input (EXIT: exit chat, RESET: reset history) >>> 你和Alia
 
 我是一名AI助手，专注于为Alias-z提供服务
 ```
+
+
+
+### Deploy the model on OpenXLab
+
+Model link: https://openxlab.org.cn/models/detail/alias-z/internlm_chat_7b_qlora_oasst1_e3_alias_z
+
+App link: 
+
+1. Download the [interface.py](https://github.com/InternLM/InternLM/blob/main/tools/transformers/interface.py) and [web_demo.py](https://github.com/InternLM/InternLM/blob/main/web_demo.py) and add model path to the `web_demo.py`
+
+```Python
+@st.cache_resource
+def load_model():
+    model = (
+        AutoModelForCausalLM.from_pretrained("internlm_chat_7b_qlora_oasst1_e3_alias_z", trust_remote_code=True)
+        .to(torch.bfloat16)
+        .cuda()
+    )
+    tokenizer = AutoTokenizer.from_pretrained("internlm_chat_7b_qlora_oasst1_e3_alias_z", trust_remote_code=True)
+    return model, tokenizer
+
+```
+
+2. Create a `app.py` to download the model and run the `streamlit`
+```Python
+import os
+from openxlab.model import download
+
+download(model_repo='alias-z/internlm_chat_7b_qlora_oasst1_e3_alias_z', output='internlm_chat_7b_qlora_oasst1_e3_alias_z')
+
+
+os.system('streamlit run web_demo.py --server.address=0.0.0.0 --server.port 7860')
+
+```
