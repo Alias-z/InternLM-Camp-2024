@@ -528,7 +528,7 @@ Model link: https://openxlab.org.cn/models/detail/alias-z/internlm_chat_7b_qlora
 
 App link: 
 
-1. Download the [interface.py](https://github.com/InternLM/InternLM/blob/main/tools/transformers/interface.py) and [web_demo.py](https://github.com/InternLM/InternLM/blob/main/web_demo.py) and add model path to the `web_demo.py`
+1. Download the [interface.py](https://github.com/InternLM/InternLM/blob/main/tools/transformers/interface.py), [web_demo.py](https://github.com/InternLM/InternLM/blob/main/web_demo.py), [user.png](https://github.com/InternLM/InternLM/blob/main/doc/imgs/user.png), [root.png](https://github.com/InternLM/InternLM/blob/main/doc/imgs/robot.png) and add model path to the `web_demo.py`
 
 ```Python
 from interface import GenerationConfig, generate_interactive
@@ -542,6 +542,17 @@ def load_model():
     )
     tokenizer = AutoTokenizer.from_pretrained("internlm_chat_7b_qlora_oasst1_e3_alias_z", trust_remote_code=True)
     return model, tokenizer
+
+def main():
+    # torch.cuda.empty_cache()
+    print("load model begin.")
+    model, tokenizer = load_model()
+    print("load model end.")
+
+    user_avator = "images/user.png"
+    robot_avator = "images/robot.png"
+
+    st.title("InternLM-Chat-7B Alias Personal Assitant")
 
 ```
 
