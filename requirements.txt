@@ -1,0 +1,7 @@
+transformers==4.35.2
+streamlit==1.24.0
+sentencepiece==0.1.99
+accelerate==0.24.1
+modelscope==1.9.5
+mdtex2html
+gradio==3.38.0
