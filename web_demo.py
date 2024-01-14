@@ -75,10 +75,10 @@ def main():
     model, tokenizer = load_model()
     print("load model end.")
 
-    user_avator = "doc/imgs/user.png"
-    robot_avator = "doc/imgs/robot.png"
+    user_avator = "images/user.png"
+    robot_avator = "images/robot.png"
 
-    st.title("InternLM-Chat-7B")
+    st.title("InternLM-Chat-7B Alias Personal Assitant")
 
     generation_config = prepare_generation_config()
 
