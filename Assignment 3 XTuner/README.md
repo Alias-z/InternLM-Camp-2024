@@ -569,3 +569,5 @@ download(model_repo='alias-z/internlm_chat_7b_qlora_oasst1_e3_alias_z', output='
 os.system('streamlit run web_demo.py --server.address=0.0.0.0 --server.port 7860')
 
 ```
+3. Deploy the model on OpenXLab
+<img src="asserts/Alias-z AI Assistant.png" /> </div>
