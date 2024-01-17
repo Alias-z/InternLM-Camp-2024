@@ -12,7 +12,7 @@ https://www.bilibili.com/video/BV1iW4y1A77P/?share_source=copy_web&vd_source=7ef
 4. Benchmark comparison on custom data via TurboMind Python with either W4A116, KV Cache or W4A16 + KV Cache. Additionally, try inference with HuggingFace
 
 
-### Install XTuner
+### Install LMDeploy
 1. Start a A100 (1/4) runtime with `Cuda11.7-conda` docker image on [InternStudio](https://studio.intern-ai.org.cn/)
 
 2. Create a new environment in the terminal (bash):
